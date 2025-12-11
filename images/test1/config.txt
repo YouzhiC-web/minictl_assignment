@@ -1,0 +1,2 @@
+entrypoint=/bin/echo
+args=hello from image
