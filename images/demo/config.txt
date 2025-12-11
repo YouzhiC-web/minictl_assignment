@@ -1,0 +1,5 @@
+entrypoint=/bin/sh
+args=echo hello-from-image
+hostname=demo-box
+mem_limit=128M
+cpu_limit=50

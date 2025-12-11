@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include "minictl.h"
 
+/*
+ * Correct Part 1 implementation
+ */
+
 int cmd_chroot(const char *rootfs, char **argv) {
     pid_t pid = fork();
     if (pid < 0) {
@@ -14,36 +18,38 @@ int cmd_chroot(const char *rootfs, char **argv) {
     }
 
     if (pid == 0) {
-        // CHILD
+        // --- CHILD ---
+
+        // Move into rootfs directory
         if (chdir(rootfs) < 0) {
             perror("chdir rootfs");
             _exit(1);
         }
-        if (chroot(rootfs) < 0) {
+
+        // chroot to the CURRENT directory (.) — not the path!
+        if (chroot(".") < 0) {
             perror("chroot");
             _exit(1);
         }
+
+        // Enter root directory of the chroot
         if (chdir("/") < 0) {
             perror("chdir /");
             _exit(1);
         }
 
+        // Execute command
         execvp(argv[0], argv);
         perror("execvp");
         _exit(1);
     }
 
-    // PARENT
+    // --- PARENT ---
     int status;
-    if (waitpid(pid, &status, 0) < 0) {
-        perror("waitpid");
-        return 1;
-    }
+    waitpid(pid, &status, 0);
 
-    if (WIFEXITED(status))
-        return WEXITSTATUS(status);
-    if (WIFSIGNALED(status))
-        return 128 + WTERMSIG(status);
-
+    if (WIFEXITED(status)) return WEXITSTATUS(status);
+    if (WIFSIGNALED(status)) return 128 + WTERMSIG(status);
     return 1;
 }
+
